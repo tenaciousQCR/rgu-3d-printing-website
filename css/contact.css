@@ -1,0 +1,88 @@
+.fh5co-contact-info ul {
+    padding: 0;
+    margin: 0;
+}
+.fh5co-contact-info ul li {
+    padding: 0 0 0 40px;
+    margin: 0 0 15px 0;
+    list-style: none;
+    position: relative;
+}
+.fh5co-contact-info ul li:before {
+    color: #045FB4;
+    position: absolute;
+    left: 0;
+    top: .01em;
+    font-family: "Basis Grotesque", sans-serif;
+    speak: none;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    list-style: none;
+    /* Better Font Rendering =========== */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+.fh5co-contact-info ul li.address:before {
+    font-size: 30px;
+}
+.fh5co-contact-info ul li.phone:before {
+    font-size: 23px;
+}
+.fh5co-contact-info ul li.email:before {
+    font-size: 23px;
+}
+.fh5co-contact-info ul li.url:before {
+    font-size: 23px;
+}
+#fh5co-contact,
+#fh5co-footer {
+    padding: 3em 0;
+    clear: both;
+}
+@media screen and (max-width: 768px) {
+    #fh5co-contact,
+    #fh5co-footer {
+        padding: 2em 0;
+    }
+}
+
+#map {
+    height: 500px;
+    width: 100%;
+}
+@media screen and (max-width: 768px) {
+    #map {
+        height: 400px;
+    }
+}
+@media screen and (max-width: 480px) {
+    #map {
+        height: 200px;
+    }
+}
+
+.btn-primary {
+    background: #045FB4;
+    color: #fff;
+    border: 2px solid #045FB4;
+}
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+    background: #77AAD6 !important;
+    border-color: #77AAD6 !important;
+}
+.form-control {
+    box-shadow: none;
+    background: transparent;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    height: 54px;
+    font-size: 18px;
+    font-weight: 300;
+}
+.form-control:active, .form-control:focus {
+    outline: none;
+    box-shadow: none;
+    border-color: #045FB4;
+}
