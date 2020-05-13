@@ -1,6 +1,101 @@
+
 <?php
+/**
+ * Get data from database
+ */
 
+// Database information
+$host = "160.153.131.196";
+$username = "mynamejeff";
+$password = "12345";
+$dbname = "3dprintrgu";
+$table = "products"; //$_GET['products'];
 
+// Connect to database
+$cnx = mysqli_connect($host, $username, $password, $dbname);
+// Check connection
+if ($cnx->connect_error) {
+    die("Failed to connect to database: " . mysqli_connect_error());
+}
+
+// SQL query
+$query = "SELECT * FROM $table";
+
+// Execute the query
+$queryResult = mysqli_query($cnx, $query) or die(mysqli_error($cnx));
+
+// Array containing every row of results in form of custom object to contain the data
+$results = [];
+
+if (!$queryResult) {
+    // Error, show alert and stop loop
+    $message = "Server error: Failed to execute query";
+    echo "<script type='text/javascript'>alert('$message');</script>";
+} else {
+    $message = "great success";
+    echo "<script type='text/javascript'>alert('$message');</script>";
+    // Get the result and add the database items to array
+    while ($row = mysqli_fetch_array($queryResult)) {
+        /*$UniqueIdentifier = $row["UniqueIdentifier"];
+        $Site = $row["Site"];
+        $Metal = $row["Metal"];
+        $BullionType = $row["BullionType"];
+        $Quantity = $row["Quantity"];
+        $Price = $row["Price"];
+        $Weight = $row["Weight"];
+        $Link = $row["Link"];
+        $PriceMin = $row["PriceMin"];
+        $WeightInGrams = $row["WeightInGrams"];
+        $PricePerGram = $currencySymbol . round($row["PricePerGram"], 2);
+
+        if (strpos($Weight, "_") !== false) {
+            // Weight contains _ so we need to remove it
+            $Weight = substr($Weight, 0, strpos($Weight, '_'));
+        }
+
+        if (strpos($Weight, "tola") !== false) {
+            // Weight contains tola, make it a little bit nicer to look at
+            $Weight = str_replace("tola", " Tola", $Weight);
+        }
+
+        if (strpos($Weight, "x") !== false) {
+            // Weight contains x so multiply it to make it look nicer
+
+            // Get the unit
+            if (strpos($Weight, "kg") !== false) {
+                $unit = "kg";
+            } else if (strpos($Weight, "g") !== false) {
+                $unit = "g";
+            } else if (strpos($Weight, "Tola") !== false) {
+                $unit = " Tola";
+            } else if (strpos($Weight, "oz") !== false) {
+                $unit = "oz";
+            }
+
+            // Separate the numbers
+            $firstNum = explode("x", $Weight)[0];
+            $secondNum = explode("x", $Weight)[1];
+            preg_match("/([0-9]+)/", $secondNum, $matches)[0];
+            $secondNum = $matches[0];
+
+            // Multiply the numbers and add the unit back in
+            $Weight = ($firstNum * $secondNum) + $unit;
+        }
+
+        // Maximise the amount of bullion the user can buy
+        // Get the number of times the unit can fit into the user's desired spend
+        $Quantity = floor($currencyAmount / $Price);
+        // Calculate the new total price & weight
+        $Price = $currencySymbol . round($Price * $Quantity, 1);
+        $WeightInGrams = round($WeightInGrams * $Quantity, 2);
+
+        // Add unit to $WeightInGrams
+        $WeightInGrams = $WeightInGrams . "g";
+
+        $BullionObj = new BullionObj($UniqueIdentifier, $Site, $Metal, $BullionType, $Quantity, $Price, $Weight, $Link, $PriceMin, $WeightInGrams, $PricePerGram);
+        array_push($results, $BullionObj);*/
+    }
+}
 ?>
 
 <!DOCTYPE HTML>
