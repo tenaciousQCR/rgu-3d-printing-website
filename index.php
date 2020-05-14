@@ -1,15 +1,17 @@
-
 <?php
 /**
  * Get data from database
  */
+
+// Included product.php for custom object to hold data from database
+include 'ProductObj.php';
 
 // Database information
 $host = "160.153.131.196";
 $username = "mynamejeff";
 $password = "12345";
 $dbname = "3dprintrgu";
-$table = "products"; //$_GET['products'];
+$productTable = "products"; //$_GET['products'];
 
 // Connect to database
 $cnx = mysqli_connect($host, $username, $password, $dbname);
@@ -19,7 +21,7 @@ if ($cnx->connect_error) {
 }
 
 // SQL query
-$query = "SELECT * FROM $table";
+$query = "SELECT * FROM $productTable";
 
 // Execute the query
 $queryResult = mysqli_query($cnx, $query) or die(mysqli_error($cnx));
@@ -32,68 +34,17 @@ if (!$queryResult) {
     $message = "Server error: Failed to execute query";
     echo "<script type='text/javascript'>alert('$message');</script>";
 } else {
-    $message = "great success";
-    echo "<script type='text/javascript'>alert('$message');</script>";
     // Get the result and add the database items to array
     while ($row = mysqli_fetch_array($queryResult)) {
-        /*$UniqueIdentifier = $row["UniqueIdentifier"];
-        $Site = $row["Site"];
-        $Metal = $row["Metal"];
-        $BullionType = $row["BullionType"];
-        $Quantity = $row["Quantity"];
-        $Price = $row["Price"];
-        $Weight = $row["Weight"];
-        $Link = $row["Link"];
-        $PriceMin = $row["PriceMin"];
-        $WeightInGrams = $row["WeightInGrams"];
-        $PricePerGram = $currencySymbol . round($row["PricePerGram"], 2);
+        $ProdID = $row["ProductID"];
+        $ProdName = $row["ProductName"];
+        $ProdPrice = $row["ProductPrice"];
+        $ProdImgUrl = $row["ProductImageUrl"];
 
-        if (strpos($Weight, "_") !== false) {
-            // Weight contains _ so we need to remove it
-            $Weight = substr($Weight, 0, strpos($Weight, '_'));
-        }
+        $ProdPrice = "£".$ProdPrice;
 
-        if (strpos($Weight, "tola") !== false) {
-            // Weight contains tola, make it a little bit nicer to look at
-            $Weight = str_replace("tola", " Tola", $Weight);
-        }
-
-        if (strpos($Weight, "x") !== false) {
-            // Weight contains x so multiply it to make it look nicer
-
-            // Get the unit
-            if (strpos($Weight, "kg") !== false) {
-                $unit = "kg";
-            } else if (strpos($Weight, "g") !== false) {
-                $unit = "g";
-            } else if (strpos($Weight, "Tola") !== false) {
-                $unit = " Tola";
-            } else if (strpos($Weight, "oz") !== false) {
-                $unit = "oz";
-            }
-
-            // Separate the numbers
-            $firstNum = explode("x", $Weight)[0];
-            $secondNum = explode("x", $Weight)[1];
-            preg_match("/([0-9]+)/", $secondNum, $matches)[0];
-            $secondNum = $matches[0];
-
-            // Multiply the numbers and add the unit back in
-            $Weight = ($firstNum * $secondNum) + $unit;
-        }
-
-        // Maximise the amount of bullion the user can buy
-        // Get the number of times the unit can fit into the user's desired spend
-        $Quantity = floor($currencyAmount / $Price);
-        // Calculate the new total price & weight
-        $Price = $currencySymbol . round($Price * $Quantity, 1);
-        $WeightInGrams = round($WeightInGrams * $Quantity, 2);
-
-        // Add unit to $WeightInGrams
-        $WeightInGrams = $WeightInGrams . "g";
-
-        $BullionObj = new BullionObj($UniqueIdentifier, $Site, $Metal, $BullionType, $Quantity, $Price, $Weight, $Link, $PriceMin, $WeightInGrams, $PricePerGram);
-        array_push($results, $BullionObj);*/
+        $ProductObt = new ProductObj($ProdID, $ProdName, $ProdPrice, $ProdImgUrl);
+        array_push($results, $ProductObt);
     }
 }
 ?>
@@ -125,6 +76,45 @@ if (!$queryResult) {
 
 <div class="spinner-loader"></div>
 
+
+<!-- LOGIN/REGISTER MODAL START -->
+<div id="loginRegisterModal" class="modal">
+    <!-- Modal content -->
+    <div class="modal-content">
+        <div class="modal-body" id="login-register-modal-form">
+            <input type='checkbox' id='form-switch'>
+            <form id='login-form' action="" method='post'>
+                <div class="modal-header">
+                    <h2>Login</h2>
+                </div>
+                <input type="text" placeholder="Username" required>
+                <input type="password" placeholder="Password" required>
+                <button class="btn" type='submit'>Login</button>
+                <label for='form-switch'><span>Register</span></label>
+            </form>
+            <form id='register-form' action="" method='post'>
+                <div class="modal-header">
+                    <h2>Register</h2>
+                </div>
+                <input type="text" placeholder="First Name" required>
+                <input type="text" placeholder="Surname" required>
+                <input type="email" placeholder="Email" required>
+                <input type="password" placeholder="Password" required>
+                <input type="password" placeholder="Re Password" required>
+                <button class="btn" type='submit'>Register</button>
+                <label for='form-switch'>Already Member ? Sign In Now..</label>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <div class="col-md-12 account-padding">
+                <button id="cancel-lr" class="btn type--uppercase">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- LOGIN/REGISTER MODAL END -->
+
+
 <div id="page" class="d-flex flex-column flex-grow-1">
     <!-- HEADER START -->
     <nav class="header-nav" role="navigation">
@@ -138,7 +128,7 @@ if (!$queryResult) {
                         <li class="header-link header-active"><a href="index.php">Home</a></li>
                         <li class="header-link"><a href="about.html">About</a></li>
                         <li class="header-link"><a href="contact.html">Contact</a></li>
-                        <li class="header-link header-right-align" id="login-register"><a onclick="login();">Login</a>/<a onclick="register();">Register</a></li>
+                        <li class="header-link header-right-align"><a id="login">Login</a>/<a id="register">Register</a></li>
                         <li class="header-link header-right-align account-inactive" id="profile-icon"><a class="profile_icon" href="account.html" style="padding: 0"></a></li>
                     </ul>
                 </div>
@@ -150,39 +140,10 @@ if (!$queryResult) {
 
     <!-- CONTENT START -->
     <div id="fh5co-product">
-        <div class="container">
+        <div class="container" id="product-container">
             <div class="row animate-box">
                 <div class="col-md-8 col-md-offset-2 text-center" style="margin-top: 10px; margin-bottom: 25px">
                     <h2>Available Pre-designed Prints</h2>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-4 text-center animate-box">
-                    <div class="product">
-                        <a class="product-grid" style="background-image:url(img/product-1.jpg); display: block"> </a>
-                        <div class="desc">
-                            <h3><a href="product.php">there is a spider deep in my hole</a></h3>
-                            <span class="price">$350</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4 text-center animate-box">
-                    <div class="product">
-                        <a class="product-grid" style="background-image:url(img/product-1.jpg); display: block"> </a>
-                        <div class="desc">
-                            <h3><a href="product.php">Product skadoosh</a></h3>
-                            <span class="price">$600</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4 text-center animate-box">
-                    <div class="product">
-                        <a class="product-grid" style="background-image:url(img/product-1.jpg); display: block"> </a>
-                        <div class="desc">
-                            <h3><a href="product.php">The fire nation attacked</a></h3>
-                            <span class="price">$780</span>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -222,7 +183,6 @@ if (!$queryResult) {
     <!-- FOOTER END -->
 </div>
 
-
 <div class="gototop js-top">
     <a href="#" class="js-gotop"><i class="icon-arrow-up"></i></a>
 </div>
@@ -241,4 +201,90 @@ if (!$queryResult) {
 <script src="js/main.js"></script>
 
 </body>
+
+<!-- Create elements populated with data from the database -->
+<?php
+for ($i = 0; $i != count($results); $i+=3) {
+    // Array doesn't have first index, stop looping
+    if (count($results) < 1 || $results[$i] == null) {
+        $message = "No more products in database! $results[$i]";
+        echo "<script type='text/javascript'>console.log('$message');</script>";
+        break;
+    }
+
+    $ProductName1 = $results[$i]->ProdName;
+    $ProductPrice1 = $results[$i]->ProdPrice;
+    $ProductImgUrl1 = $results[$i]->ProdImgUrl;
+
+    $ProductName2 = "";
+    $ProductPrice2 = "";
+    $ProductImgUrl2 = "";
+
+    $ProductName3 = "";
+    $ProductPrice3 = "";
+    $ProductImgUrl3 = "";
+
+    // Array has 2nd index
+    if ($results[$i + 1] != null) {
+        $ProductName2 = $results[$i + 1]->ProdName;
+        $ProductPrice2 = $results[$i + 1]->ProdPrice;
+        $ProductImgUrl2 = $results[$i + 1]->ProdImgUrl;
+    }
+
+    // Array has 3rd index
+    if ($results[$i + 2] != null) {
+        $ProductName3 = $results[$i + 2]->ProdName;
+        $ProductPrice3 = $results[$i + 2]->ProdPrice;
+        $ProductImgUrl3 = $results[$i + 2]->ProdImgUrl;
+    }
+
+    echo '<script type="text/javascript">',
+        'var mProdName1 = "' .$ProductName1. '";',
+        'var mProdPrice1 = "' .$ProductPrice1. '";',
+        'var mProdImgUrl1 = "' .$ProductImgUrl1. '";',
+
+        'var mProdName2 = "' .$ProductName2. '";',
+        'var mProdPrice2 = "' .$ProductPrice2. '";',
+        'var mProdImgUrl2 = "' .$ProductImgUrl2. '";',
+
+        'var mProdName3 = "' .$ProductName3. '";',
+        'var mProdPrice3 = "' .$ProductPrice3. '";',
+        'var mProdImgUrl3 = "' .$ProductImgUrl3. '";',
+
+        'var productRow = "<div class=\"row\">" +
+            "<div class=\"col-md-4 text-center animate-box\">" +
+                "<div class=\"product\">" +
+                    "<a class=\"product-grid\" style=\"display: block; background-image:url(\'" + mProdImgUrl1 + "\');\"> </a>" +
+                    "<div class=\"desc\">" +
+                        "<h3>" + mProdName1 + "</h3>" +
+                        "<span class=\"price\">" + mProdPrice1 + "</span>" +
+                    "</div>" +
+                "</div>" +
+            "</div>" +
+            "<div class=\"col-md-4 text-center animate-box\">" +
+                "<div class=\"product\">" +
+                    "<a class=\"product-grid\" style=\"display: block; background-image:url(\'" + mProdImgUrl2 + "\');\"> </a>" +
+                    "<div class=\"desc\">" +
+                        "<h3>" + mProdName2 + "</h3>" +
+                        "<span class=\"price\">" + mProdPrice2 + "</span>" +
+                    "</div>" +
+                "</div>" +
+            "</div>" +
+            "<div class=\"col-md-4 text-center animate-box\">" +
+                "<div class=\"product\">" +
+                    "<a class=\"product-grid\" style=\"display: block; background-image:url(\'" + mProdImgUrl3 + "\');\"> </a>" +
+                    "<div class=\"desc\">" +
+                        "<h3>" + mProdName3 + "</h3>" +
+                        "<span class=\"price\">" + mProdPrice3 + "</span>" +
+                    "</div>" +
+                "</div>" +
+            "</div>" +
+        "</div>";',
+
+        'var div = document.createElement(\'div\');',
+        'div.innerHTML = productRow;',
+        'document.getElementById("product-container").appendChild(div);',
+    '</script>';
+}
+?>
 </html>
