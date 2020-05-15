@@ -90,7 +90,7 @@ session_start();
 
 
 <!-- LOGIN/REGISTER MODAL START -->
-<div id="loginRegisterModal" class="modal">
+<div class="modal" id="loginRegisterModal">
     <!-- Modal content -->
     <div class="modal-content">
         <div class="modal-body" id="login-register-modal-form">
@@ -117,13 +117,28 @@ session_start();
         </div>
         <div class="modal-footer">
             <div class="col-md-12 account-padding">
-                <button id="cancel-lr" class="btn type--uppercase">Cancel</button>
+                <button id="cancel-lr" class="btn ">Cancel</button>
             </div>
         </div>
     </div>
 </div>
 <!-- LOGIN/REGISTER MODAL END -->
 
+
+<!-- ERROR MODAL START -->
+<div class="modal" id="error-modal">
+    <div class="modal-content" style="max-width: 500px">
+        <div class="modal-body">
+            <h3 id="error-modal-message">Placeholder error text.</h3>
+        </div>
+        <div class="modal-footer">
+            <div class="col-md-12 account-padding">
+                <button id="error-ok" class="btn ">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ERROR MODAL END -->
 
 <div id="page">
     <!-- HEADER START -->
@@ -222,8 +237,19 @@ session_start();
 <script src="js/main.js"></script>
 <!-- Login/register -->
 <script src="js/profile.js"></script>
+<!-- error modal -->
+<script src="js/error-modal.js"></script>
 
 </body>
+<?php
+// Check if an alert needs to be displayed (after inputting incorrect stuff when trying to login or register)
+if(isset($_SESSION['alert']) && strlen($_SESSION['alert']) > 0){
+    $message = $_SESSION['alert'];
+    echo "<script type='text/javascript'>showModal();</script>";
+    echo "<script type='text/javascript'>document.getElementById(\"error-modal-message\").innerHTML = '$message'</script>";
+    $_SESSION['alert'] = "";
+}
+?>
 
 <!-- Create elements populated with data from the database -->
 <?php

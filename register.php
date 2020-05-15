@@ -15,9 +15,13 @@ if (mysqli_connect_errno()) {
 
 // Validate the users inpuit
 if (!isset($_POST['email'], $_POST['password'], $_POST['repassword'])) {
-    exit('Please fill both the email and password fields.');
-} else if ($_POST['password'] != $_POST['repassword']) {
-    exit('Passwords do not match.');
+    $_SESSION['alert'] = "Error: please fill both the email and password fields.";
+    header('Location: index.php');
+    exit();
+} else if ($_POST['password'] !== $_POST['repassword']) {
+    $_SESSION['alert'] = "Error: passwords do not match.";
+    header('Location: index.php');
+    exit();
 }
 
 // Check if email is already registered
@@ -31,7 +35,9 @@ if ($stmt = $con->prepare('SELECT email FROM users WHERE email = ?')) {
 
     if ($stmt->num_rows > 0) {
         // Email already exist
-        exit('Email is already registered.');
+        $_SESSION['alert'] = "Error: email is already registered.";
+        header('Location: index.php');
+        exit();
     }
     // email doesnt exist, proceed!
     $stmt->close();
@@ -55,5 +61,6 @@ if ($stmt = $con->prepare('INSERT INTO users (id, email, password) VALUES (DEFAU
     $_SESSION['id'] = $id;
 
     header('Location: index.php');
+    exit();
 }
 ?>

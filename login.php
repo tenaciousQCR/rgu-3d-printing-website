@@ -16,7 +16,9 @@ if (mysqli_connect_errno()) {
 // check if the data exists
 if ( !isset($_POST['email'], $_POST['password']) ) {
     // data was not sent when it should have been
-    exit('Please fill both the email and password fields.');
+    $_SESSION['alert'] = "Error: please fill both the email and password fields.";
+    header('Location: index.php');
+    exit();
 }
 
 // preparing the SQL statement will prevent SQL injection.
@@ -41,11 +43,16 @@ if ($stmt = $con->prepare('SELECT id, password FROM users WHERE email = ?')) {
             $_SESSION['id'] = $id;
 
             header('Location: index.php');
+            exit();
         } else {
-            echo 'Incorrect password!';
+            $_SESSION['alert'] = "Error: incorrect password!";
+            header('Location: index.php');
+            exit();
         }
     } else {
-        echo 'Invalid email address!';
+        $_SESSION['alert'] = "Error: invalid email address!";
+        header('Location: index.php');
+        exit();
     }
 
 

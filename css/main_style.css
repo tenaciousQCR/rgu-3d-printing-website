@@ -290,6 +290,7 @@ h2, h3 {
 .header-right-align {
     right: 0;
     position: absolute;
+    cursor: pointer;
 }
 
 .account-inactive {

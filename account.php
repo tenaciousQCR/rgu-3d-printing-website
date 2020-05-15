@@ -26,8 +26,80 @@ if ($cnx->connect_error) {
     die("Failed to connect to database: " . mysqli_connect_error());
 }
 
-// get the users email from session
-$email = $_SESSION['name'];
+// user clicked save
+if (isset($_POST['email'])) {
+    // only update email if user entered a different one
+    if ($_SESSION['name'] != $_POST['email']) {
+        if ($stmt = $cnx->prepare('UPDATE users SET email=? WHERE id=?')) {
+            // Bind parameters (s = string, i = int etc
+            $stmt->bind_param('si', $_POST['email'], $_SESSION["id"]);
+            $stmt->execute();
+
+            // Set alert text to be displayed on redirect
+            $_SESSION['alert'] = "Email changed successfully.";
+            // update session email
+            $_SESSION['name'] = $_POST['email'];
+
+            // refresh the page to show the change
+            header("Refresh:0");
+            exit();
+        }
+    }
+}
+
+// user changed password
+if (isset($_POST['cpass'])) {
+    // check new password matches
+    if ($_POST['npass'] !== $_POST['npass-conf']) {
+        $_SESSION['alert'] = "Error: passwords do not match.";
+        header("Refresh:0");
+        exit();
+    }
+
+    // check if their input current password is correct
+    if ($stmt = $cnx->prepare('SELECT password FROM users WHERE id = ?')) {
+        // Bind parameters (s = string, i = int, b = blob, etc)
+        $stmt->bind_param('s', $_SESSION['id']);
+        $stmt->execute();
+        // Store the result to check if the user exists in database later
+        $stmt->store_result();
+
+        if ($stmt->num_rows > 0) {
+            $stmt->bind_result($password);
+            $stmt->fetch();
+
+            // user exists, verify the password
+            // passwords are hashed, check the hash not the password
+            if (password_verify($_POST['cpass'], $password)) {
+                // Verification success, now change the password
+                if ($stmt = $cnx->prepare('UPDATE users SET password=? WHERE id=?')) {
+                    // Bind parameters (s = string, i = int etc
+                    $newPassword = password_hash($_POST['npass'], PASSWORD_ARGON2I);
+                    $stmt->bind_param('si', $newPassword, $_SESSION["id"]);
+                    $stmt->execute();
+
+                    // Set alert text to be displayed on redirect
+                    $_SESSION['alert'] = "Password updated.";
+
+                    // refresh the page to show the change
+                    header("Refresh:0");
+                    exit();
+                }
+            } else {
+                $_SESSION['alert'] = "Error: incorrect password.";
+                header("Refresh:0");
+                exit();
+            }
+        } else {
+            $_SESSION['alert'] = "Error finding account in database. Please contact support.";
+            header("Refresh:0");
+            exit();
+        }
+
+
+        $stmt->close();
+    }
+}
 ?>
 
 <!DOCTYPE HTML>
@@ -52,9 +124,19 @@ $email = $_SESSION['name'];
 
     <!-- Theme style  -->
     <link rel="stylesheet" href="css/main_style.css">
+
+    <!-- favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
+    <link rel="manifest" href="./site.webmanifest">
+    <link rel="mask-icon" href="./safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#2b5797">
+    <meta name="theme-color" content="#ffffff">
 </head>
 <body>
 
+<!-- PASSWORD MODAL START -->
 <div id="mModal" class="modal">
     <!-- Modal content -->
     <div class="modal-content">
@@ -63,34 +145,50 @@ $email = $_SESSION['name'];
             <h2>Change your password</h2>
         </div>
         <div class="modal-body">
-            <form>
+            <form method="post" id="change-pass-form">
                 <div class="row">
-                    <div class="col-md-6 account-padding">
+                    <div class="col-md-12 account-padding">
                         <label>Current password: </label>
                         <!--suppress HtmlFormInputWithoutLabel -->
-                        <input name="cpass" value="">
+                        <input type="password" name="cpass" value="" required>
                     </div>
                     <div class="col-md-12 account-padding">
                         <label>New password: </label>
                         <!--suppress HtmlFormInputWithoutLabel -->
-                        <input name="npass" value="">
+                        <input type="password" name="npass" value="" required>
                     </div>
                     <div class="col-md-12 account-padding">
                         <label>Confirm new password: </label>
                         <!--suppress HtmlFormInputWithoutLabel -->
-                        <input name="npass-conf" value="">
+                        <input type="password" name="npass-conf" value="" required>
                     </div>
                 </div>
             </form>
         </div>
         <div class="modal-footer">
             <div class="col-md-12 account-padding">
-                <button class="btn type--uppercase">Cancel</button>
-                <button class="btn type--uppercase">Save</button>
+                <button class="btn" id="cancel-change-pass">Cancel</button>
+                <button class="btn" type="submit" form="change-pass-form">Save</button>
             </div>
         </div>
     </div>
 </div>
+<!-- PASSWORD MODAL END -->
+
+<!-- ERROR MODAL START -->
+<div class="modal" id="error-modal">
+    <div class="modal-content" style="max-width: 500px">
+        <div class="modal-body">
+            <h3 id="error-modal-message">Placeholder error text.</h3>
+        </div>
+        <div class="modal-footer">
+            <div class="col-md-12 account-padding">
+                <button id="error-ok" class="btn ">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ERROR MODAL END -->
 
 <div class="spinner-loader"></div>
 
@@ -121,18 +219,18 @@ $email = $_SESSION['name'];
         <div class="row">
             <div class="col-lg-8" style="margin-left: 10%">
                 <h3 style="padding-top: 20px">Your Account</h3>
-                <form>
+                <form method="post">
                     <div class="row">
                         <div class="col-md-12 account-padding">
                             <label>Email Address:</label>
                             <!--suppress HtmlFormInputWithoutLabel -->
-                            <input type="email" name="email" value="<?php echo$email?>">
+                            <input type="email" name="email" value="<?php echo$_SESSION['name']?>">
                         </div>
                         <div class="col-md-6 account-padding">
-                            <button id="chng-pass-btn">Change Password</button>
+                            <button id="chng-pass-btn" class="btn">Change Password</button>
                         </div>
                         <div class="col-md-12 account-padding">
-                            <button class="btn type--uppercase">Save Profile</button>
+                            <button class="btn" type="submit">Save Profile</button>
                         </div>
                     </div>
                 </form>
@@ -193,6 +291,18 @@ $email = $_SESSION['name'];
 <script src="js/jquery.flexslider-min.js"></script>
 <!-- Main -->
 <script src="js/main.js"></script>
+<!-- error modal -->
+<script src="js/error-modal.js"></script>
 
 </body>
+
+<?php
+// Check if an alert needs to be displayed (after email or password is changed)
+if(isset($_SESSION['alert']) && strlen($_SESSION['alert']) > 0){
+    $message = $_SESSION['alert'];
+    echo "<script type='text/javascript'>showModal();</script>";
+    echo "<script type='text/javascript'>document.getElementById(\"error-modal-message\").innerHTML = '$message'</script>";
+    $_SESSION['alert'] = "";
+}
+?>
 </html>
