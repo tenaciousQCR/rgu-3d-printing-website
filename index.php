@@ -3,7 +3,7 @@
  * Get data from database
  */
 
-// Included product.php for custom object to hold data from database
+// Included ProductObj.php for custom object to hold data from database
 include 'ProductObj.php';
 
 // Database information
@@ -47,6 +47,9 @@ if (!$queryResult) {
         array_push($results, $ProductObt);
     }
 }
+
+// User login
+session_start();
 ?>
 
 <!DOCTYPE HTML>
@@ -71,8 +74,17 @@ if (!$queryResult) {
 
     <!-- Theme style  -->
     <link rel="stylesheet" href="css/main_style.css">
+
+    <!-- favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
+    <link rel="manifest" href="./site.webmanifest">
+    <link rel="mask-icon" href="./safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#2b5797">
+    <meta name="theme-color" content="#ffffff">
 </head>
-<body class="d-flex flex-column">
+<body>
 
 <div class="spinner-loader"></div>
 
@@ -83,24 +95,22 @@ if (!$queryResult) {
     <div class="modal-content">
         <div class="modal-body" id="login-register-modal-form">
             <input type='checkbox' id='form-switch'>
-            <form id='login-form' action="" method='post'>
+            <form id='login-form' action="login.php" method='post'>
                 <div class="modal-header">
                     <h2>Login</h2>
                 </div>
-                <input type="text" placeholder="Username" required>
-                <input type="password" placeholder="Password" required>
+                <input type="text" placeholder="Email" name="email" required>
+                <input type="password" placeholder="Password" name="password" required>
                 <button class="btn" type='submit'>Login</button>
                 <label for='form-switch'><span>Register</span></label>
             </form>
-            <form id='register-form' action="" method='post'>
+            <form id='register-form' action="register.php" method='post'>
                 <div class="modal-header">
                     <h2>Register</h2>
                 </div>
-                <input type="text" placeholder="First Name" required>
-                <input type="text" placeholder="Surname" required>
-                <input type="email" placeholder="Email" required>
-                <input type="password" placeholder="Password" required>
-                <input type="password" placeholder="Re Password" required>
+                <input type="email" placeholder="Email" name="email" required>
+                <input type="password" placeholder="Password" name="password" required>
+                <input type="password" placeholder="Re Password" name="repassword" required>
                 <button class="btn" type='submit'>Register</button>
                 <label for='form-switch'>Already Member ? Sign In Now..</label>
             </form>
@@ -115,7 +125,7 @@ if (!$queryResult) {
 <!-- LOGIN/REGISTER MODAL END -->
 
 
-<div id="page" class="d-flex flex-column flex-grow-1">
+<div id="page">
     <!-- HEADER START -->
     <nav class="header-nav" role="navigation">
         <div class="container">
@@ -128,8 +138,16 @@ if (!$queryResult) {
                         <li class="header-link header-active"><a href="index.php">Home</a></li>
                         <li class="header-link"><a href="about.html">About</a></li>
                         <li class="header-link"><a href="contact.html">Contact</a></li>
-                        <li class="header-link header-right-align"><a id="login">Login</a>/<a id="register">Register</a></li>
-                        <li class="header-link header-right-align account-inactive" id="profile-icon"><a class="profile_icon" href="account.html" style="padding: 0"></a></li>
+                        <?php
+                        // Show or hide login/register button and profile icon depending on if user is logged in
+                        if (isset($_SESSION['loggedin'])) {
+                            echo "<li class=\"header-link header-right-align account-inactive\"><a id=\"login\">Login</a>/<a id=\"register\">Register</a></li>";
+                            echo "<li class=\"header-link header-right-align\" id=\"profile-icon\"><a class=\"profile_icon\" href=\"account.php\" style=\"padding: 0\"></a></li>";
+                        } else {
+                            echo "<li class=\"header-link header-right-align\"><a id=\"login\">Login</a>/<a id=\"register\">Register</a></li>";
+                            echo "<li class=\"header-link header-right-align account-inactive\" id=\"profile-icon\"><a class=\"profile_icon\" href=\"account.php\" style=\"padding: 0\"></a></li>";
+                        }
+                        ?>
                     </ul>
                 </div>
             </div>
@@ -139,7 +157,7 @@ if (!$queryResult) {
 
 
     <!-- CONTENT START -->
-    <div id="fh5co-product">
+    <div id="fh5co-product" style="min-height: 60%">
         <div class="container" id="product-container">
             <div class="row animate-box">
                 <div class="col-md-8 col-md-offset-2 text-center" style="margin-top: 10px; margin-bottom: 25px">
@@ -148,6 +166,9 @@ if (!$queryResult) {
             </div>
         </div>
     </div>
+
+    <!-- element to fill remaining space and stick footer to bottom -->
+    <div style="flex-grow : 1;"></div>
     <!-- CONTENT END -->
 
 
@@ -199,6 +220,8 @@ if (!$queryResult) {
 <script src="js/jquery.flexslider-min.js"></script>
 <!-- Main -->
 <script src="js/main.js"></script>
+<!-- Login/register -->
+<script src="js/profile.js"></script>
 
 </body>
 
@@ -251,7 +274,7 @@ for ($i = 0; $i != count($results); $i+=3) {
         'var mProdPrice3 = "' .$ProductPrice3. '";',
         'var mProdImgUrl3 = "' .$ProductImgUrl3. '";',
 
-        'var productRow = "<div class=\"row\">" +
+    'var productRow = "<div class=\"row\">" +
             "<div class=\"col-md-4 text-center animate-box\">" +
                 "<div class=\"product\">" +
                     "<a class=\"product-grid\" style=\"display: block; background-image:url(\'" + mProdImgUrl1 + "\');\"> </a>" +
@@ -281,9 +304,9 @@ for ($i = 0; $i != count($results); $i+=3) {
             "</div>" +
         "</div>";',
 
-        'var div = document.createElement(\'div\');',
-        'div.innerHTML = productRow;',
-        'document.getElementById("product-container").appendChild(div);',
+    'var div = document.createElement(\'div\');',
+    'div.innerHTML = productRow;',
+    'document.getElementById("product-container").appendChild(div);',
     '</script>';
 }
 ?>
