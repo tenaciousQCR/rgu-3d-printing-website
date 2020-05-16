@@ -11,7 +11,7 @@ $host = "160.153.131.196";
 $username = "mynamejeff";
 $password = "12345";
 $dbname = "3dprintrgu";
-$productTable = "products"; //$_GET['products'];
+$productTable = "products";
 
 // Connect to database
 $cnx = mysqli_connect($host, $username, $password, $dbname);
@@ -50,6 +50,40 @@ if (!$queryResult) {
 
 // User login
 session_start();
+
+// check if user up or down voted a product
+if (isset($_GET['tu']) || isset($_GET['td'])) {
+    // user did vote on a product
+    if (!isset($_SESSION['loggedin'])) {
+        // User not logged in, show error
+        $_SESSION['alert'] = "Error: you need to login to do that.";
+        header('Location: index.php');
+        exit();
+    }
+
+    // get the product id
+    $thumbProductID = null;
+    $vote = null;
+    if ($_GET['tu'] != null) {
+        $thumbProductID = $_GET['tu'];
+        $vote = 1;
+    } else {
+        $thumbProductID = $_GET['td'];
+        $vote = 0;
+    }
+
+    $userID = $_SESSION['id'];
+    // TableKey = ProductID + UserID -> it ensures it is unique and a user can only vote once
+    $tableKey = "$thumbProductID"."$userID";
+
+    // use replace instead of insert to replace it if it exists
+    $userRatingQuery = "REPLACE INTO ratings (TableKey, ProductID, UserID, PositiveVote) VALUES (?, ?, ?, ?)";
+    if ($stmt = $cnx->prepare($userRatingQuery)) {
+        // Bind parameters (s = string, i = int etc
+        $stmt->bind_param('iiii', $tableKey, $thumbProductID, $userID, $vote);
+        $stmt->execute();
+    }
+}
 ?>
 
 <!DOCTYPE HTML>
@@ -261,49 +295,154 @@ for ($i = 0; $i != count($results); $i+=3) {
         break;
     }
 
+    // Get product data from ProductObj, created at top of file
+    $ProductId1 = $results[$i]->ProdID;
     $ProductName1 = $results[$i]->ProdName;
     $ProductPrice1 = $results[$i]->ProdPrice;
     $ProductImgUrl1 = $results[$i]->ProdImgUrl;
+    // Get total number of ratings for this product
+    $totalRatings1 = mysqli_query($cnx, "SELECT COUNT(*) as `count` FROM ratings WHERE ProductID = " . $ProductId1) or die(mysqli_error($cnx));
+    $totalRatingsRow1 = mysqli_fetch_array($totalRatings1);
+    $totalRatingCount1 = $totalRatingsRow1['count'];
+    // Get number of positive ratings to workout percentage
+    $positiveRatings1 = mysqli_query($cnx, "SELECT COUNT(*) as `count` FROM ratings WHERE ProductID = " . $ProductId1 . " AND PositiveVote = 1") or die(mysqli_error($cnx));
+    $positiveRatingCount1 = mysqli_fetch_array($positiveRatings1)['count'];
+    // Percentage positive
+    $percentPositive1 = ($positiveRatingCount1 / $totalRatingCount1) * 100;
 
+    // Thumb style
+    $thumbUpStyle1 = "thumb-up";
+    $thumbDownStyle1 = "thumb-down";
+    // check if the user has voted on product one (if they're logged in)
+    if ($_SESSION['loggedin']) {
+        $userID = $_SESSION['id'];
+        $tableKey1 = "$ProductId1"."$userID";
+        $userVotedQry1 = mysqli_query($cnx, "SELECT PositiveVote as `vote` FROM ratings WHERE TableKey = $tableKey1") or die(mysqli_error($cnx));
+        if($userVotedQry1->num_rows > 0) {
+            // User has voted
+            $userVoteP1 = mysqli_fetch_array($userVotedQry1)['vote'];
+            if ($userVoteP1 == 1) {
+                $thumbUpStyle1 = "thumb-up-active";
+            } else {
+                $thumbDownStyle1 = "thumb-down-active";
+            }
+        }
+    }
+
+    $ProductId2 = "";
     $ProductName2 = "";
     $ProductPrice2 = "";
     $ProductImgUrl2 = "";
 
+    $ProductId3 = "";
     $ProductName3 = "";
     $ProductPrice3 = "";
     $ProductImgUrl3 = "";
 
     // Array has 2nd index
     if ($results[$i + 1] != null) {
+        $ProductId2 = $results[$i + 1]->ProdID;
         $ProductName2 = $results[$i + 1]->ProdName;
         $ProductPrice2 = $results[$i + 1]->ProdPrice;
         $ProductImgUrl2 = $results[$i + 1]->ProdImgUrl;
+
+        // Get total number of ratings for this product
+        $totalRatings2 = mysqli_query($cnx, "SELECT COUNT(*) as `count` FROM ratings WHERE ProductID = " . $ProductId2) or die(mysqli_error($cnx));
+        $totalRatingsRow2 = mysqli_fetch_array($totalRatings2);
+        $totalRatingCount2 = $totalRatingsRow2['count'];
+        // Get number of positive ratings to workout percentage
+        $positiveRatings2 = mysqli_query($cnx, "SELECT COUNT(*) as `count` FROM ratings WHERE ProductID = " . $ProductId2 . " AND PositiveVote = 1") or die(mysqli_error($cnx));
+        $positiveRatingCount2 = mysqli_fetch_array($positiveRatings2)['count'];
+        // Percentage positive
+        $percentPositive2 = ($positiveRatingCount2 / $totalRatingCount2) * 100;
+
+        // Thumb style
+        $thumbUpStyle2 = "thumb-up";
+        $thumbDownStyle2 = "thumb-down";
+        // check if the user has voted on product one (if they're logged in)
+        if ($_SESSION['loggedin']) {
+            $tableKey2 = "$ProductId2"."$userID";
+            $userVotedQry2 = mysqli_query($cnx, "SELECT PositiveVote as `vote` FROM ratings WHERE TableKey = $tableKey2") or die(mysqli_error($cnx));
+            if($userVotedQry2->num_rows > 0) {
+                // User has voted
+                $userVoteP2 = mysqli_fetch_array($userVotedQry2)['vote'];
+                if ($userVoteP2 == 1) {
+                    $thumbUpStyle2 = "thumb-up-active";
+                } else {
+                    $thumbDownStyle2 = "thumb-down-active";
+                }
+            }
+        }
     }
 
     // Array has 3rd index
     if ($results[$i + 2] != null) {
+        $ProductId3 = $results[$i + 2]->ProdID;
         $ProductName3 = $results[$i + 2]->ProdName;
         $ProductPrice3 = $results[$i + 2]->ProdPrice;
         $ProductImgUrl3 = $results[$i + 2]->ProdImgUrl;
+
+        // Get total number of ratings for this product
+        $totalRatings3 = mysqli_query($cnx, "SELECT COUNT(*) as `count` FROM ratings WHERE ProductID = " . $ProductId3) or die(mysqli_error($cnx));
+        $totalRatingCount3 = mysqli_fetch_array($totalRatings3)['count'];
+        // Get number of positive ratings to workout percentage
+        $positiveRatings3 = mysqli_query($cnx, "SELECT COUNT(*) as `count` FROM ratings WHERE ProductID = " . $ProductId3 . " AND PositiveVote = 1") or die(mysqli_error($cnx));
+        $positiveRatingsRow3 = mysqli_fetch_array($positiveRatings3);
+        $positiveRatingCount3 = $positiveRatingsRow3['count'];
+        // Percentage positive
+        $percentPositive3 = ($positiveRatingCount3 / $totalRatingCount3) * 100;
+
+        // Thumb style
+        $thumbUpStyle3 = "thumb-up";
+        $thumbDownStyle3 = "thumb-down";
+        if ($_SESSION['loggedin']) {
+            $tableKey3 = "$ProductId3"."$userID";
+            $userVotedQry3 = mysqli_query($cnx, "SELECT PositiveVote as `vote` FROM ratings WHERE TableKey = $tableKey3") or die(mysqli_error($cnx));
+            if($userVotedQry3->num_rows > 0) {
+                // User has voted
+                $userVoteP3 = mysqli_fetch_array($userVotedQry3)['vote'];
+                if ($userVoteP3 == 1) {
+                    $thumbUpStyle3 = "thumb-up-active";
+                } else {
+                    $thumbDownStyle3 = "thumb-down-active";
+                }
+            }
+        }
     }
 
+    // Create product elements populated with data from database
     echo '<script type="text/javascript">',
+        // Convert php variable into javascript variables so that they're easier to use
         'var mProdName1 = "' .$ProductName1. '";',
         'var mProdPrice1 = "' .$ProductPrice1. '";',
         'var mProdImgUrl1 = "' .$ProductImgUrl1. '";',
+        'var mProdID1 = "' .$ProductId1. '";',
+        'var mProdPercent1 = "' .$percentPositive1. '";',
+        'var mThumbUpStyle1 = "' .$thumbUpStyle1. '";',
+        'var mThumbDownStyle1 = "' .$thumbDownStyle1. '";',
 
         'var mProdName2 = "' .$ProductName2. '";',
         'var mProdPrice2 = "' .$ProductPrice2. '";',
         'var mProdImgUrl2 = "' .$ProductImgUrl2. '";',
+        'var mProdID2 = "' .$ProductId2. '";',
+        'var mProdPercent2 = "' .$percentPositive2. '";',
+        'var mThumbUpStyle2 = "' .$thumbUpStyle2. '";',
+        'var mThumbDownStyle2 = "' .$thumbDownStyle2. '";',
 
         'var mProdName3 = "' .$ProductName3. '";',
         'var mProdPrice3 = "' .$ProductPrice3. '";',
         'var mProdImgUrl3 = "' .$ProductImgUrl3. '";',
+        'var mProdID3 = "' .$ProductId3. '";',
+        'var mProdPercent3 = "' .$percentPositive3. '";',
+        'var mThumbUpStyle3 = "' .$thumbUpStyle3. '";',
+        'var mThumbDownStyle3 = "' .$thumbDownStyle3. '";',
 
     'var productRow = "<div class=\"row\">" +
             "<div class=\"col-md-4 text-center animate-box\">" +
                 "<div class=\"product\">" +
-                    "<a class=\"product-grid\" style=\"display: block; background-image:url(\'" + mProdImgUrl1 + "\');\"> </a>" +
+                    "<div class=\"product-grid\" style=\"display: block; background-image:url(\'" + mProdImgUrl1 + "\');\">" +
+                        "<div class=\"product-voting\"><a class=\"" + mThumbDownStyle1 + "\" href=\"index.php?td=" + mProdID1 + "\"></a><p>" + mProdPercent1 + "</p><p>%</p><a class=\"" + mThumbUpStyle1 + "\" href=\"index.php?tu=" + mProdID1 + "\"></a></div>" +
+                    "</div>" +
                     "<div class=\"desc\">" +
                         "<h3>" + mProdName1 + "</h3>" +
                         "<span class=\"price\">" + mProdPrice1 + "</span>" +
@@ -312,7 +451,9 @@ for ($i = 0; $i != count($results); $i+=3) {
             "</div>" +
             "<div class=\"col-md-4 text-center animate-box\">" +
                 "<div class=\"product\">" +
-                    "<a class=\"product-grid\" style=\"display: block; background-image:url(\'" + mProdImgUrl2 + "\');\"> </a>" +
+                    "<div class=\"product-grid\" style=\"display: block; background-image:url(\'" + mProdImgUrl2 + "\');\">" +
+                        "<div class=\"product-voting\"><a class=\"" + mThumbDownStyle2 + "\" href=\"index.php?td=" + mProdID2 + "\"></a><p>" + mProdPercent2 + "</p><p>%</p><a class=\"" + mThumbUpStyle2 + "\" href=\"index.php?tu=" + mProdID2 + "\"></a></div>" +
+                    "</div>" +
                     "<div class=\"desc\">" +
                         "<h3>" + mProdName2 + "</h3>" +
                         "<span class=\"price\">" + mProdPrice2 + "</span>" +
@@ -321,7 +462,9 @@ for ($i = 0; $i != count($results); $i+=3) {
             "</div>" +
             "<div class=\"col-md-4 text-center animate-box\">" +
                 "<div class=\"product\">" +
-                    "<a class=\"product-grid\" style=\"display: block; background-image:url(\'" + mProdImgUrl3 + "\');\"> </a>" +
+                    "<div class=\"product-grid\" style=\"display: block; background-image:url(\'" + mProdImgUrl3 + "\');\">" +
+                        "<div class=\"product-voting\"><a class=\"" + mThumbDownStyle3 + "\" href=\"index.php?td=" + mProdID3 + "\"></a><p>" + mProdPercent3 + "</p><p>%</p><a class=\"" + mThumbUpStyle3 + "\" href=\"index.php?tu=" + mProdID3 + "\"></a></div>" +
+                    "</div>" +
                     "<div class=\"desc\">" +
                         "<h3>" + mProdName3 + "</h3>" +
                         "<span class=\"price\">" + mProdPrice3 + "</span>" +

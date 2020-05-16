@@ -150,17 +150,17 @@ if (isset($_POST['cpass'])) {
                     <div class="col-md-12 account-padding">
                         <label>Current password: </label>
                         <!--suppress HtmlFormInputWithoutLabel -->
-                        <input type="password" name="cpass" value="" required>
+                        <input class="form-control" type="password" name="cpass" value="" required>
                     </div>
                     <div class="col-md-12 account-padding">
                         <label>New password: </label>
                         <!--suppress HtmlFormInputWithoutLabel -->
-                        <input type="password" name="npass" value="" required>
+                        <input class="form-control" type="password" name="npass" value="" required>
                     </div>
                     <div class="col-md-12 account-padding">
                         <label>Confirm new password: </label>
                         <!--suppress HtmlFormInputWithoutLabel -->
-                        <input type="password" name="npass-conf" value="" required>
+                        <input class="form-control" type="password" name="npass-conf" value="" required>
                     </div>
                 </div>
             </form>
@@ -224,7 +224,7 @@ if (isset($_POST['cpass'])) {
                         <div class="col-md-12 account-padding">
                             <label>Email Address:</label>
                             <!--suppress HtmlFormInputWithoutLabel -->
-                            <input type="email" name="email" value="<?php echo$_SESSION['name']?>">
+                            <input class="form-control" type="email" name="email" value="<?php echo$_SESSION['name']?>">
                         </div>
                         <div class="col-md-6 account-padding">
                             <button id="chng-pass-btn" class="btn">Change Password</button>

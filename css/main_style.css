@@ -157,8 +157,64 @@ h2, h3 {
     line-height: 24px;
 }
 
-.product .desc h3 a {
+.desc h3 {
+    display: block;
+}
+
+.product .desc h3 a, p {
     color: #000;
+    display: inline;
+}
+
+/* product voting */
+.thumb-up {
+    content:url('../img/ic_thumb_up_black.svg');
+}
+
+.thumb-down {
+    content:url('../img/ic_thumb_down_black.svg');
+}
+
+.thumb-down-active {
+    content:url('../img/ic_thumb_down.svg');
+}
+
+.thumb-up-active {
+    content:url('../img/ic_thumb_up.svg');
+}
+
+.thumb-up, .thumb-up-active {
+    padding-left: 5px;
+    margin-right: -5px;
+}
+
+.thumb-down, .thumb-down-active {
+    padding-right: 5px;
+    padding-left: 5px;
+}
+
+.thumb-down, .thumb-up, .thumb-down-active, .thumb-up-active {
+    height: 30px;
+    cursor: pointer;
+}
+
+.product-voting {
+    float:right;
+    height: 30px;
+    /*noinspection CssInvalidFunction*/
+    background:rgb(255, 255, 255, 0.7);
+    border-radius: 10px;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.product-voting p {
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 20px;
 }
 
 .product .desc .price {
@@ -363,7 +419,7 @@ h2, h3 {
     -webkit-border-radius: 2px;
     -moz-border-radius: 2px;
     -ms-border-radius: 2px;
-    border-radius: 2px;
+    border-radius: 4px;
     -webkit-transition: 0.5s;
     -o-transition: 0.5s;
     transition: 0.5s;
